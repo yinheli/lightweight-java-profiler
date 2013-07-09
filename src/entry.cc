@@ -186,7 +186,10 @@ static void ParseArguments(char *options) {
 
   if (Globals::OutFile == NULL) {
     char path[PATH_MAX];
-    getcwd(path, PATH_MAX);
+    if (getcwd(path, PATH_MAX) == NULL) {
+      fprintf(stderr, "cwd too long?\n");
+      exit(0);
+    }
     size_t pathlen = strlen(path);
     strncat(path, kDefaultOutFile, PATH_MAX - pathlen);
     Globals::OutFile = fopen(path, "w+");
