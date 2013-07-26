@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <limits.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <string>
 
@@ -191,6 +192,7 @@ static void ParseArguments(char *options) {
       exit(0);
     }
     size_t pathlen = strlen(path);
+    strncat(path, "/", PATH_MAX - pathlen);
     strncat(path, kDefaultOutFile, PATH_MAX - pathlen);
     Globals::OutFile = fopen(path, "w+");
   }
