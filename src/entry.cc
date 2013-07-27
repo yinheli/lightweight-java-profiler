@@ -192,7 +192,7 @@ static void ParseArguments(char *options) {
       exit(0);
     }
     size_t pathlen = strlen(path);
-    strncat(path, "/", PATH_MAX - pathlen);
+    strncat(path, "/", PATH_MAX - (pathlen++));
     strncat(path, kDefaultOutFile, PATH_MAX - pathlen);
     Globals::OutFile = fopen(path, "w+");
   }
