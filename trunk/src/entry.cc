@@ -67,7 +67,6 @@ void JNICALL OnVMInit(jvmtiEnv *jvmti, JNIEnv *jni_env, jthread thread) {
     jclass klass = classList[i];
     CreateJMethodIDsForClass(jvmti, klass);
   }
-
   prof->Start();
 }
 
@@ -220,10 +219,11 @@ static void ParseArguments(char *options) {
 AGENTEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options,
                                       void *reserved) {
   IMPLICITLY_USE(reserved);
-
   int err;
   jvmtiEnv *jvmti;
   ParseArguments(options);
+
+  Accessors::Init();
 
   if ((err = (vm->GetEnv(reinterpret_cast<void **>(&jvmti), JVMTI_VERSION))) !=
       JNI_OK) {
@@ -253,4 +253,5 @@ AGENTEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options,
 
 AGENTEXPORT void JNICALL Agent_OnUnload(JavaVM *vm) {
   IMPLICITLY_USE(vm);
+  Accessors::Destroy();
 }
