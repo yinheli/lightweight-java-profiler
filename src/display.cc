@@ -86,13 +86,13 @@ void StackTracesPrinter::PrintLeafHistogram(TraceData *traces, int length) {
 // This method changes the standard class signature "Lfoo/bar;" format
 // to a more readable "foo.bar" format.
 static void CleanJavaSignature(char *signature_ptr) {
-  int signature_length = strlen(signature_ptr);  // ugh!
+  size_t signature_length = strlen(signature_ptr);  // ugh!
   if (signature_length < 3) {                    // I'm not going to even try.
     return;
   }
 
   signature_ptr[0] = ' ';
-  for (int i = 1; i < signature_length - 1; ++i) {
+  for (size_t i = 1; i < signature_length - 1; ++i) {
     if (signature_ptr[i] == '/') {
       signature_ptr[i] = '.';
     }
@@ -122,7 +122,7 @@ jint StackTracesPrinter::GetLineNumber(jmethodID method, jlocation location) {
   } else {
     jvmtiLineNumberEntry *table_ptr = table_ptr_ctr.Get();
     if (entry_count > 1) {
-      jint last_location = table_ptr[0].start_location;
+      jlocation last_location = table_ptr[0].start_location;
       for (int l = 1; l < entry_count; l++) {
         // ... and if you see one that is in the right place for your
         // location, you've found the line number!

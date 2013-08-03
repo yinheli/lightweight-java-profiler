@@ -14,16 +14,26 @@ FILE *Globals::OutFile;
 
 void JNICALL OnThreadStart(jvmtiEnv *jvmti_env, JNIEnv *jni_env,
                            jthread thread) {
+  IMPLICITLY_USE(jvmti_env);
+  IMPLICITLY_USE(thread);
   Accessors::SetCurrentJniEnv(jni_env);
 }
 
 void JNICALL OnThreadEnd(jvmtiEnv *jvmti_env, JNIEnv *jni_env, jthread thread) {
+  IMPLICITLY_USE(jvmti_env);
+  IMPLICITLY_USE(jni_env);
+  IMPLICITLY_USE(thread);
 }
 
 // This has to be here, or the VM turns off class loading events.
 // And AsyncGetCallTrace needs class loading events to be turned on!
 void JNICALL OnClassLoad(jvmtiEnv *jvmti_env, JNIEnv *jni_env, jthread thread,
-                         jclass klass) {}
+                         jclass klass) {
+  IMPLICITLY_USE(jvmti_env);
+  IMPLICITLY_USE(jni_env);
+  IMPLICITLY_USE(thread);
+  IMPLICITLY_USE(klass);
+}
 
 // Calls GetClassMethods on a given class to force the creation of
 // jmethodIDs of it.
@@ -44,6 +54,8 @@ void CreateJMethodIDsForClass(jvmtiEnv *jvmti, jclass klass) {
 }
 
 void JNICALL OnVMInit(jvmtiEnv *jvmti, JNIEnv *jni_env, jthread thread) {
+  IMPLICITLY_USE(thread);
+  IMPLICITLY_USE(jni_env);
   // Forces the creation of jmethodIDs of the classes that had already
   // been loaded (eg java.lang.Object, java.lang.ClassLoader) and
   // OnClassPrepare() misses.
@@ -61,6 +73,8 @@ void JNICALL OnVMInit(jvmtiEnv *jvmti, JNIEnv *jni_env, jthread thread) {
 
 void JNICALL OnClassPrepare(jvmtiEnv *jvmti_env, JNIEnv *jni_env,
                             jthread thread, jclass klass) {
+  IMPLICITLY_USE(jni_env);
+  IMPLICITLY_USE(thread);
   // We need to do this to "prime the pump", as it were -- make sure
   // that all of the methodIDs have been initialized internally, for
   // AsyncGetCallTrace.  I imagine it slows down class loading a mite,
@@ -69,6 +83,9 @@ void JNICALL OnClassPrepare(jvmtiEnv *jvmti_env, JNIEnv *jni_env,
 }
 
 void JNICALL OnVMDeath(jvmtiEnv *jvmti_env, JNIEnv *jni_env) {
+  IMPLICITLY_USE(jvmti_env);
+  IMPLICITLY_USE(jni_env);
+
   prof->Stop();
   prof->DumpToFile(Globals::OutFile);
 }
@@ -146,13 +163,15 @@ static bool RegisterJvmti(jvmtiEnv *jvmti) {
   return true;
 }
 
-static void SetFileFromOption(char *key, char *equals) {
+#define POSITIVE(x) (static_cast<size_t>(x > 0 ? x : 0))
+
+static void SetFileFromOption(char *equals) {
   char *name_begin = equals + 1;
   char *name_end;
   if ((name_end = strchr(equals, ',')) == NULL) {
     name_end = equals + strlen(equals);
   }
-  int len = name_end - name_begin;
+  size_t len = POSITIVE(name_end - name_begin);
   char *file_name = new char[len];
   strncpy(file_name, name_begin, len);
   if (strcmp(file_name, "stderr") == 0) {
@@ -180,8 +199,8 @@ static void ParseArguments(char *options) {
       fprintf(stderr, "No value for key %s\n", key);
       continue;
     }
-    if (strncmp(key, "file", equals - key) == 0) {
-      SetFileFromOption(key, equals);
+    if (strncmp(key, "file", POSITIVE(equals - key)) == 0) {
+      SetFileFromOption(equals);
     }
   }
 
@@ -200,6 +219,8 @@ static void ParseArguments(char *options) {
 
 AGENTEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options,
                                       void *reserved) {
+  IMPLICITLY_USE(reserved);
+
   int err;
   jvmtiEnv *jvmti;
   ParseArguments(options);
@@ -230,4 +251,6 @@ AGENTEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options,
   return 0;
 }
 
-AGENTEXPORT void JNICALL Agent_OnUnload(JavaVM *vm) {}
+AGENTEXPORT void JNICALL Agent_OnUnload(JavaVM *vm) {
+  IMPLICITLY_USE(vm);
+}

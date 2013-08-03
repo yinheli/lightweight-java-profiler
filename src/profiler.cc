@@ -39,7 +39,7 @@ static uint64_t CalculateHash(JVMPI_CallTrace *trace, int skip) {
     h += reinterpret_cast<uintptr_t>(trace->frames[i].method_id);
     h += h << 10;
     h ^= h >> 6;
-    h += trace->frames[i].lineno;
+    h += static_cast<uintptr_t>(trace->frames[i].lineno);
     h += h << 10;
     h ^= h >> 6;
   }
@@ -49,6 +49,8 @@ static uint64_t CalculateHash(JVMPI_CallTrace *trace, int skip) {
 }
 
 void Profiler::Handle(int signum, siginfo_t *info, void *context) {
+  IMPLICITLY_USE(signum);
+  IMPLICITLY_USE(info);
   ErrnoRaii err_storage;  // stores and resets errno
 
   JNIEnv *env = Accessors::CurrentJniEnv();

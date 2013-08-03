@@ -9,6 +9,9 @@
 
 #define AGENTEXPORT __attribute__((visibility("default"))) JNIEXPORT
 
+// Gets us around -Wunused-parameter
+#define IMPLICITLY_USE(x) (void) x;
+
 // Wrap JVMTI functions in this in functions that expect a return
 // value and require cleanup.
 #define JVMTI_ERROR_CLEANUP_1(error, retval, cleanup)    \
