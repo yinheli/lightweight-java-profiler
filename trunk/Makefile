@@ -20,7 +20,7 @@ else ifeq ($(UNAME), linux)
   PLATFORM_WARNINGS:=-Wframe-larger-than=16384 -Wno-unused-but-set-variable \
     -Wunused-but-set-parameter -Wvla -Wno-conversion-null \
     -Wno-builtin-macro-redefined
-  HEADERS:="include"
+  HEADERS:=include
   CC=g++
   LDFLAGS=-Wl,--fatal-warnings
 endif
@@ -59,7 +59,7 @@ $(BUILD_DIR)/%.pic.o: $(SRC_DIR)/%.cc
 	$(CC) $(INCLUDES) $(COPTS) -Fvisibility=hidden -fPIC -c $< -o $@
 
 $(AGENT): $(OBJECTS)
-	$(CC) $(LDFLAGS) $(OTHER_CFLAGS) -shared -o $(BUILD_DIR)/$(AGENT) \
+	$(CC) $(COPTS) -shared -o $(BUILD_DIR)/$(AGENT) \
 	  -Bsymbolic $(OBJECTS) $(LIBS)
 
 all: $(AGENT)
