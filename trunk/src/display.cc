@@ -6,8 +6,11 @@
 #include <string.h>
 
 #include <algorithm>
-#include <set>
 #include <string>
+// The map used here doesn't need to be ordered, but unordered_map
+// seems to cause problems out of the box on Ubuntu, and hash_map is
+// non-standard.
+#include <map>
 #include <vector>
 
 void StackTracesPrinter::PrintStackTraces(TraceData *traces, int length) {
@@ -17,7 +20,7 @@ void StackTracesPrinter::PrintStackTraces(TraceData *traces, int length) {
     if (traces[i].count != 0) {
       total += traces[i].count;
       count++;
-      fprintf(file_, "%" PRIdPTR "d ", traces[i].count);
+      fprintf(file_, "%"PRIdPTR" ", traces[i].count);
       PrintStackTrace(&traces[i]);
       fprintf(file_, "\n");
     }
@@ -36,7 +39,7 @@ struct Sorter {
 
 void StackTracesPrinter::PrintLeafHistogram(TraceData *traces, int length) {
   fprintf(file_, "\n\nHot methods:\n");
-  std::multiset<PairCallFrame> hot_methods;
+  std::map<PairCallFrame, int> hot_methods;
   for (int i = 0; i < length; i++) {
     if (traces[i].count != 0) {
       JVMPI_CallTrace *t = &(traces[i].trace);
@@ -48,7 +51,9 @@ void StackTracesPrinter::PrintLeafHistogram(TraceData *traces, int length) {
       if (f == last_frame) {
         continue;
       }
-      hot_methods.insert(std::pair<jint, jmethodID>(f->lineno, f->method_id));
+
+      PairCallFrame pair(f->lineno, f->method_id);
+      hot_methods[pair] += traces[i].count;
     }
   }
 
@@ -58,7 +63,7 @@ void StackTracesPrinter::PrintLeafHistogram(TraceData *traces, int length) {
   sorted_methods.reserve(hot_methods.size());
 
   for (auto method : hot_methods) {
-    sorted_methods.emplace_back(method, hot_methods.count(method));
+    sorted_methods.emplace_back(method.first, method.second);
   }
 
   std::sort(sorted_methods.begin(), sorted_methods.end(), sorter);
