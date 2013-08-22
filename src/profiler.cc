@@ -67,10 +67,14 @@ void Profiler::Handle(int signum, siginfo_t *info, void *context) {
 
   JVMPI_CallTrace trace;
   JVMPI_CallFrame frames[kMaxFramesToCapture];
-  // memset is not async-safe.
-  for (int i = 0; i < kMaxFramesToCapture; ++i) {
-    frames[i].lineno = 0;
-    frames[i].method_id = 0;
+  // We have to set every byte to 0 instead of just initializing the
+  // individual fields, because the structs might be padded, and we
+  // use memcmp on it later.  We can't use memset, because it isn't
+  // async-safe.
+  char *base = reinterpret_cast<char *>(frames);
+  for (char *p = base; p < base + sizeof(JVMPI_CallFrame) * kMaxFramesToCapture;
+       p++) {
+    *p = 0;
   }
 
   trace.frames = frames;
@@ -91,12 +95,18 @@ void Profiler::Handle(int signum, siginfo_t *info, void *context) {
   uint64_t idx = hash_val % kMaxStackTraces;
 
   uint64_t i = idx;
+
   do {
     intptr_t *count = &(traces_[i].count);
     if (*count == 0 && (NoBarrier_CompareAndSwap(count, 0, 1) == 0)) {
       // memcpy is not async safe
       JVMPI_CallFrame *fb = frame_buffer_[i];
       for (int frame_num = 0; frame_num < trace.num_frames; ++frame_num) {
+        base = reinterpret_cast<char *>(&(fb[frame_num]));
+        // Make sure the padding is all set to 0.
+        for (char *p = base; p < base + sizeof(JVMPI_CallFrame); p++) {
+          *p = 0;
+        }
         fb[frame_num].lineno = trace.frames[frame_num].lineno;
         fb[frame_num].method_id = trace.frames[frame_num].method_id;
       }
