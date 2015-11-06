@@ -48,3 +48,12 @@ It will spit out stack traces into traces.txt (or into the optional fname passed
 Yes, this is a horrible user interface. I imagine it would be relatively straightforward to spit out results in dot, or create any interface you want for parsing the output. Patches welcome.
 
 
+### gen Flame Graph
+
+```
+git clone http://github.com/brendangregg/FlameGraph
+cd FlameGraph
+./stackcollapse-ljp.awk < ../traces.txt | ./flamegraph.pl > ../traces.svg
+```
+
+more detail see http://www.brendangregg.com/blog/2014-06-12/java-flame-graphs.html
